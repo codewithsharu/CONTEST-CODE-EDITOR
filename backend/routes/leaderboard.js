@@ -1,10 +1,8 @@
 const router = require('express').Router();
 const Submission = require('../models/Submission');
-const { auth } = require('../middleware/auth');
 
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    // Get the latest successful submission for each problem by each user
     const leaderboard = await Submission.aggregate([
       { $match: { status: 'Accepted' } },
       { $sort: { submittedAt: -1 } },
@@ -45,6 +43,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json(leaderboard);
   } catch (error) {
+    console.error('Leaderboard error:', error);
     res.status(500).json({ message: error.message });
   }
 });
