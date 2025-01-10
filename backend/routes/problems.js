@@ -38,7 +38,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Create new problem (admin only)
-router.post('/', auth, isAdmin, async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const problem = new Problem({
       ...req.body,
@@ -76,6 +76,36 @@ router.delete('/:id', auth, isAdmin, async (req, res) => {
       return res.status(404).json({ message: 'Problem not found' });
     }
     res.json({ message: 'Problem deleted' });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Add test problem
+router.post('/test-problem', auth, async (req, res) => {
+  try {
+    const testProblem = new Problem({
+      title: "Two Sum",
+      difficulty: "Easy",
+      description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+      sampleInput: "[2,7,11,15]\n9",
+      sampleOutput: "[0,1]",
+      testCases: [
+        {
+          input: "[2,7,11,15]\n9",
+          expectedOutput: "[0,1]",
+          isHidden: false
+        },
+        {
+          input: "[3,2,4]\n6",
+          expectedOutput: "[1,2]",
+          isHidden: false
+        }
+      ]
+    });
+    
+    const savedProblem = await testProblem.save();
+    res.status(201).json(savedProblem);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }

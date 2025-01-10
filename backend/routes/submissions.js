@@ -105,4 +105,24 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+router.post('/test-submission', async (req, res) => {
+  try {
+    const testSubmission = new Submission({
+      problem: req.body.problemId,
+      user: req.body.userId,
+      language: 'javascript',
+      code: 'function twoSum(nums, target) { return [0,1]; }',
+      status: 'Accepted',
+      testCasesPassed: 2,
+      totalTestCases: 2,
+      executionTime: 100
+    });
+    
+    await testSubmission.save();
+    res.json({ message: 'Test submission created' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router; 

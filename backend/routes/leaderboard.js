@@ -48,4 +48,13 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/test', async (req, res) => {
+  try {
+    const count = await Submission.countDocuments();
+    res.json({ message: 'Leaderboard route working', submissionCount: count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router; 

@@ -12,36 +12,69 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  Button,
 } from "@chakra-ui/react";
-import { getLeaderboard } from "../api";
+import { getLeaderboard, submitSolution } from "../api";
+import api from "../api";
+import { useNavigate } from "react-router-dom";
 
 const Leaderboard = () => {
+  const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const createTestData = async () => {
+    try {
+      setLoading(true);
+      const problemResponse = await api.post('/problems/test-problem');
+
+      await submitSolution(
+        problemResponse.data._id,
+        'function twoSum(nums, target) { return [0,1]; }',
+        'javascript'
+      );
+
+      const response = await getLeaderboard();
+      setLeaderboard(response.data);
+    } catch (error) {
+      console.error("Error creating test data:", error);
+      setError(error.response?.data?.message || 'Failed to create test data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     const fetchLeaderboard = async () => {
       try {
         setLoading(true);
-        setError(null);
         const response = await getLeaderboard();
-        console.log('Leaderboard response:', response); // Debug log
-        setLeaderboard(Array.isArray(response.data) ? response.data : []);
+        setLeaderboard(response.data);
       } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-        setError(error.message || 'Failed to load leaderboard');
+        console.error("Error details:", error);
+        if (error.response?.status === 401) {
+          navigate("/login");
+        } else {
+          setError(error.response?.data?.message || 'Failed to load leaderboard');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return (
-      <Box textAlign="center" mt={10}>
+      <Box display="flex" justifyContent="center" alignItems="center" minH="50vh">
         <Spinner size="xl" color="blue.500" />
       </Box>
     );
@@ -57,12 +90,19 @@ const Leaderboard = () => {
   }
 
   return (
-    <Container maxW="container.lg">
-      <Text fontSize="2xl" color="white" mb={6}>
-        Leaderboard
-      </Text>
+    <Container maxW="container.lg" py={8}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={6}>
+        <Text fontSize="2xl" color="white">
+          Leaderboard
+        </Text>
+        <Button colorScheme="blue" onClick={createTestData}>
+          Create Test Data
+        </Button>
+      </Box>
       {leaderboard.length === 0 ? (
-        <Text color="gray.300" textAlign="center">No submissions yet</Text>
+        <Box textAlign="center" p={8} bg="gray.800" borderRadius="md">
+          <Text color="gray.300">No submissions yet</Text>
+        </Box>
       ) : (
         <Box bg="gray.800" borderRadius="md" overflow="hidden">
           <Table variant="simple">

@@ -18,6 +18,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export const executeCode = (language, code) => 
+  api.post("/execute", { language, code });
+
 export const getLeaderboard = () => api.get("/leaderboard");
 export const getProblem = (id) => api.get(`/problems/${id}`);
 export const getProblems = () => api.get("/problems");

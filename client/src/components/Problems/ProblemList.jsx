@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
   Table,
@@ -11,29 +11,60 @@ import {
   Badge,
   Text,
   Container,
+  Spinner,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { getProblems } from "../../api";
 
 const ProblemList = () => {
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     const fetchProblems = async () => {
       try {
-        const data = await getProblems();
-        setProblems(data);
+        setLoading(true);
+        const response = await getProblems();
+        setProblems(response.data);
       } catch (error) {
         console.error("Error fetching problems:", error);
+        setError(error.response?.data?.message || "Failed to load problems");
+        if (error.response?.status === 401) {
+          navigate("/login");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchProblems();
-  }, []);
+  }, [navigate]);
 
-  if (loading) return <Text color="white">Loading...</Text>;
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minH="50vh">
+        <Spinner size="xl" color="blue.500" />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert status="error" mt={10}>
+        <AlertIcon />
+        {error}
+      </Alert>
+    );
+  }
 
   return (
     <Container maxW="container.xl">
